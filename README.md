@@ -41,6 +41,13 @@ Este projeto cria um bot Telegram que responde ao comando `/clima` enviando info
 
 ### 2. Configurar webhook
 
+- Configure o Telegram para usar o webhook
+  ```bash
+  curl.exe -X POST "https://api.telegram.org/bot<SEU_TOKEN>/setWebhook?url=https://abcd1234.ngrok.io/webhook"
+- Caso precise remover o webhook
+  ```bash
+  curl.exe -X POST "https://api.telegram.org/bot<SEU_TOKEN>/deleteWebhook"
+  
 - Execute seu servidor Flask (arquivo `webhook.py`), que ficará escutando as requisições.
 - Use o [ngrok](https://ngrok.com/) para expor seu servidor local para a internet:
 
@@ -51,9 +58,12 @@ Copie a URL pública HTTPS gerada, por exemplo:
 `https://abcd1234.ngrok.io`
 
 Registre a URL do webhook no Telegram, ajustando para o endpoint correto (`/webhook`):
-
   ```bash
 `https://api.telegram.org/bot<SEU_TOKEN>/setWebhook?url=https://abcd1234.ngrok.io/webhook`
+ ```
+ Caso precise remover o webhook
+  ```bash
+  curl.exe -X POST "https://api.telegram.org/bot<SEU_TOKEN>/deleteWebhook"
 ```
 
 ### 3. Configurar variáveis no `clima_script.py`
@@ -62,7 +72,10 @@ Registre a URL do webhook no Telegram, ajustando para o endpoint correto (`/webh
 - Defina a cidade desejada (exemplo: `Blumenau,BR`)
 - Configure o token do bot Telegram (`TELEGRAM_BOT_TOKEN`)
 - Configure o chat ID (`TELEGRAM_CHAT_ID`) — normalmente obtido via webhook
-
+- Para consultar informações de ID do chat entre outras
+  ```bash
+  https://api.telegram.org/bot<SEU_TOKEN>/getUpdates
+  ```
 ---
 
 ### Executando localmente
