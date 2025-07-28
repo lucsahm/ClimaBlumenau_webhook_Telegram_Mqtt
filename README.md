@@ -1,3 +1,12 @@
+## 📢 Grupo no Telegram
+
+Para facilitar testes, tirar dúvidas e trocar ideias, existe um grupo no Telegram chamado **Clima Blumenau**.
+
+Você pode participar para receber atualizações, enviar comandos e interagir com o bot em um ambiente real.
+
+**Link para entrar no grupo:** [https://t.me/joinchat/climablumenau](https://t.me/joinchat/SEU_LINK_AQUI](https://t.me/climablumenau)  
+*(Substitua pelo link correto do seu grupo)*
+
 # Telegram Clima Bot
 
 Este projeto cria um bot Telegram que responde ao comando `/clima` enviando informações meteorológicas atuais para um grupo ou chat, utilizando a API do OpenWeatherMap. A comunicação é feita via webhook com Flask e o bot pode publicar dados também via MQTT.
