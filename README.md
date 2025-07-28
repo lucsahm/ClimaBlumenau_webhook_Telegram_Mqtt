@@ -75,7 +75,7 @@ Este projeto cria um bot Telegram que responde ao comando `/clima` enviando info
 - Insira sua chave da OpenWeatherMap (`OWM_API_KEY`) `https://openweathermap.org/`
 - Defina a cidade desejada (exemplo: `Blumenau,BR`)
 - Configure o token do bot Telegram (`TELEGRAM_BOT_TOKEN`)
-- Configure o chat ID (`TELEGRAM_CHAT_ID`) — nesse caso é obtido via webhook automaticamete
+- Configure o chat ID (`TELEGRAM_CHAT_ID`) — nesse caso é obtido via webhook automaticamente
 - Para consultar informações de ID do chat entre outras
   `https://api.telegram.org/bot<SEU_TOKEN>/getUpdates`
   
