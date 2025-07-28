@@ -44,7 +44,7 @@ Copie a URL pública HTTPS gerada, por exemplo:
 Registre a URL do webhook no Telegram, ajustando para o endpoint correto (`/webhook`):
 
 ```bash
-https://api.telegram.org/bot<SEU_TOKEN>/setWebhook?url=https://abcd1234.ngrok.io/webhook
+`https://api.telegram.org/bot<SEU_TOKEN>/setWebhook?url=https://abcd1234.ngrok.io/webhook`
 
 ### 3. Configurar variáveis no `clima_script.py`
 
