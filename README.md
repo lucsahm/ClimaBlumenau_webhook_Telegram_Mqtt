@@ -39,43 +39,46 @@ Este projeto cria um bot Telegram que responde ao comando `/clima` enviando info
 - Fale com o [@BotFather](https://t.me/BotFather) e crie um novo bot.
 - Anote o token gerado.
 
-### 2. Configurar webhook
+### 2. Crie um grupo no Telegram
+  - Adicione o bot que foi criado ao grupo
+  - Envie uma mensagem qualquer
+  - Acesse no navegador
+    `https://api.telegram.org/bot<SEU_TOKEN>/getUpdates`
+  - Procure pelo chatId que noramalmente começa com sinal de '-': '-123456789'
 
-- Configure o Telegram para usar o webhook
-  ```bash
-  curl.exe -X POST "https://api.telegram.org/bot<SEU_TOKEN>/setWebhook?url=https://abcd1234.ngrok.io/webhook"
-- Caso precise remover o webhook
-  ```bash
-  curl.exe -X POST "https://api.telegram.org/bot<SEU_TOKEN>/deleteWebhook"
+### 3. Configurar webhook
+
+  - Instale o webhook conforme seu ambiente e copie seu token.
+    `https://dashboard.ngrok.com`
   
-- Execute seu servidor Flask (arquivo `webhook.py`), que ficará escutando as requisições.
-- Use o [ngrok](https://ngrok.com/) para expor seu servidor local para a internet:
+  - Execute o comando no terminal:
+    ```bash
+    ngrok config add-authtoken <SEU_TOKEN>
+    ```
+  - Execute seu servidor Flask (arquivo `webhook.py`), que ficará escutando as requisições.
+  
+  - Inicialize o ngrok na porta 5000 (ou outra) mas tem que verificar se vai ser a mesma do Flask
+    ```bash
+    ngrok http 5000
+    ```
+  - Copie a URL pública HTTPS gerada pelo ngrok, por exemplo:  
+    `https://abcd1234.ngrok.io`
 
-  ```bash
-  ngrok http 5000
-  ```
-Copie a URL pública HTTPS gerada, por exemplo:  
-`https://abcd1234.ngrok.io`
-
-Registre a URL do webhook no Telegram, ajustando para o endpoint correto (`/webhook`):
-  ```bash
-`https://api.telegram.org/bot<SEU_TOKEN>/setWebhook?url=https://abcd1234.ngrok.io/webhook`
- ```
- Caso precise remover o webhook
-  ```bash
-  curl.exe -X POST "https://api.telegram.org/bot<SEU_TOKEN>/deleteWebhook"
-```
+  - Registre a URL do webhook no Telegram, ajustando para o endpoint correto (`/webhook`):
+    `https://api.telegram.org/bot<SEU_TOKEN>/setWebhook?url=https://abcd1234.ngrok.io/webhook`
+   
+  - Caso precise remover o webhook do Telegram:
+    `https://api.telegram.org/bot<SEU_TOKEN>/deleteWebhook`
 
 ### 3. Configurar variáveis no `clima_script.py`
 
-- Insira sua chave da OpenWeatherMap (`OWM_API_KEY`)
+- Insira sua chave da OpenWeatherMap (`OWM_API_KEY`) `https://openweathermap.org/`
 - Defina a cidade desejada (exemplo: `Blumenau,BR`)
 - Configure o token do bot Telegram (`TELEGRAM_BOT_TOKEN`)
-- Configure o chat ID (`TELEGRAM_CHAT_ID`) — normalmente obtido via webhook
+- Configure o chat ID (`TELEGRAM_CHAT_ID`) — nesse caso é obtido via webhook automaticamete
 - Para consultar informações de ID do chat entre outras
-  ```bash
-  https://api.telegram.org/bot<SEU_TOKEN>/getUpdates
-  ```
+  `https://api.telegram.org/bot<SEU_TOKEN>/getUpdates`
+  
 ---
 
 ### Executando localmente
@@ -88,7 +91,7 @@ python webhook.py
 ngrok http 5000
 ```
 
-Envie /clima para o seu bot no Telegram. O bot responderá com as informações do clima atual.
+Entre no grupo e envie /clima no Telegram. O bot responderá com as informações do clima atual.
 
 Estrutura dos arquivos
 webhook.py — servidor Flask que recebe atualizações do Telegram e chama o script do clima.
