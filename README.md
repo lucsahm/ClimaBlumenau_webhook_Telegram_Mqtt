@@ -99,3 +99,16 @@ webhook.py — servidor Flask que recebe atualizações do Telegram e chama o sc
 clima_script.py — script que consulta a API de clima e envia mensagem ao Telegram e MQTT.
 
 requirements.txt — lista de dependências Python.
+
+Pode ser que você precise converter os arquivos para Unix com o comando:
+```bash
+dos2unix nomedoarquivo.py
+```
+Garanta que os arquivo estejam marcados como executáveis:
+```
+chmod +x nomedoarquivo.py
+```
+Pode precisar usar um Shebang no inicio dos scripts:
+```bash
+#!/usr/bin/env python
+```
