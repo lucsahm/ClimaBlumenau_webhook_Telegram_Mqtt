@@ -38,13 +38,15 @@ Este projeto cria um bot Telegram que responde ao comando `/clima` enviando info
 
   ```bash
   ngrok http 5000
+  ```
 Copie a URL pública HTTPS gerada, por exemplo:  
 `https://abcd1234.ngrok.io`
 
 Registre a URL do webhook no Telegram, ajustando para o endpoint correto (`/webhook`):
 
-```bash
+  ```bash
 `https://api.telegram.org/bot<SEU_TOKEN>/setWebhook?url=https://abcd1234.ngrok.io/webhook`
+```
 
 ### 3. Configurar variáveis no `clima_script.py`
 
@@ -61,10 +63,9 @@ Instale as dependências:
 
 ```bash
 pip install -r requirements.txt
-
-pip install -r requirements.txt
 python webhook.py
 ngrok http 5000
+```
 
 Envie /clima para o seu bot no Telegram. O bot responderá com as informações do clima atual.
 
