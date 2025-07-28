@@ -4,7 +4,7 @@ Para facilitar testes, tirar dúvidas e trocar ideias, existe um grupo no Telegr
 
 Você pode participar para receber atualizações, enviar comandos e interagir com o bot em um ambiente real.
 
-**Link para entrar no grupo:** [https://t.me/joinchat/climablumenau](https://t.me/joinchat/SEU_LINK_AQUI](https://t.me/climablumenau)  
+**Link para entrar no grupo:** https://t.me/climablumenau  
 *(Substitua pelo link correto do seu grupo)*
 
 # Telegram Clima Bot
