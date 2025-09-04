@@ -6,10 +6,9 @@ Bot do Telegram que responde a comandos como **/clima** e **/previsao_Xh** com d
 
 ## 📢 Grupo no Telegram
 
-Para facilitar testes, dúvidas e trocas de ideias, existe um grupo chamado **Clima Blumenau**.
+Para facilitar testes, existe um grupo chamado **Clima Blumenau**.
 
 **Link para entrar:** https://t.me/climablumenau  
-*(Substitua pelo link correto do seu grupo.)*
 
 ---
 
@@ -40,14 +39,14 @@ Para facilitar testes, dúvidas e trocas de ideias, existe um grupo chamado **Cl
 
 ## 📁 Estrutura dos arquivos (relevantes)
 
-ClimaBlumenau_webhook_Telegram_Mqtt/
-├─ README.md
-├─ requirements.txt
-├─ start_webhook.sh # Sobe Flask (tmux: webhook) + ngrok (tmux: ngrok) e configura o webhook
-├─ webhook_clima.py # Flask: endpoint /webhook -> despacha para os scripts
-├─ clima_script.py # Clima atual (usa OWM e envia ao Telegram / MQTT)
-├─ previsao_script.py # Previsão em horas (6/12/24)
-└─ notas.txt # Anotações internas
+ClimaBlumenau_webhook_Telegram_Mqtt
+	├─ README.md
+	├─ requirements.txt
+	├─ start_webhook.sh # Sobe Flask (tmux: webhook) + ngrok (tmux: ngrok) e configura o webhook
+	├─ webhook_clima.py # Flask: endpoint /webhook -> despacha para os scripts
+	├─ clima_script.py # Clima atual (usa OWM e envia ao Telegram / MQTT)
+	├─ previsao_script.py # Previsão em horas (6/12/24)
+	└─ notas.txt # Anotações internas
 
 > **Importante:** o arquivo de configuração **não é versionado** por segurança (ver seção abaixo).
 
@@ -77,8 +76,11 @@ flask.log
 __pycache__/
 *.pyc
 ````
+
 ---
+
 ## 📦 Dependências
+
 # Python (pip)
 
 Instale as libs do projeto:
@@ -87,11 +89,9 @@ pip install -r requirements.txt
 
 # Sistema (não vão no requirements.txt)
 
-tmux
-
-ngrok
-
-python3 (intérprete)
+	*tmux
+	*ngrok
+	*python3 (intérprete)
 
 No Termux (Android), por exemplo:
 ````bash
@@ -99,7 +99,9 @@ pkg install tmux
 ````
 
 Baixe o binário do ngrok e deixe no PATH (ou use o gerenciador da sua distro).
+
 ---
+
 ## ▶️ Como executar
 
 # Método recomendado (automatizado)
