@@ -1,114 +1,187 @@
-## 📢 Grupo no Telegram
-
-Para facilitar testes, tirar dúvidas e trocar ideias, existe um grupo no Telegram chamado **Clima Blumenau**.
-
-Você pode participar para receber atualizações, enviar comandos e interagir com o bot em um ambiente real.
-
-**Link para entrar no grupo:** https://t.me/climablumenau
-
 # Telegram Clima Bot
 
-Este projeto cria um bot Telegram que responde ao comando `/clima` enviando informações meteorológicas atuais para um grupo ou chat, utilizando a API do OpenWeatherMap. A comunicação é feita via webhook com Flask e o bot pode publicar dados também via MQTT.
+Bot do Telegram que responde a comandos como **/clima** e **/previsao_Xh** com dados meteorológicos (OpenWeatherMap), usando **Flask** via **webhook**. A exposição pública é feita com **ngrok** e a orquestração local usa **tmux** (duas sessões: `webhook` e `ngrok`).
 
 ---
 
-## Funcionalidades
+## 📢 Grupo no Telegram
 
-- Recebe o comando `/clima` no Telegram.
-- Consulta a API do OpenWeatherMap para obter dados meteorológicos atuais.
-- Envia a resposta formatada para o grupo ou usuário que solicitou.
-- Publica os dados via MQTT (opcional).
-- Utiliza webhook para receber atualizações do Telegram em tempo real.
+Para facilitar testes, dúvidas e trocas de ideias, existe um grupo chamado **Clima Blumenau**.
 
----
-
-## Tecnologias usadas
-
-- Python 3
-- Flask (para o webhook)
-- Requests (para chamadas HTTP)
-- Paho-MQTT (para MQTT)
-- Ngrok (para expor localmente o webhook para internet)
+**Link para entrar:** https://t.me/climablumenau  
+*(Substitua pelo link correto do seu grupo.)*
 
 ---
 
-## Configuração
+## ✨ Funcionalidades
 
-### 1. Criar bot no Telegram
+- Comandos no Telegram:
+  - `/clima`
+  - `/previsao_6h`
+  - `/previsao_12h`
+  - `/previsao_24h`
+- Consulta a **OpenWeatherMap** para clima atual/previsão.
+- Envia resposta formatada ao chat que solicitou.
+- Publica via **MQTT** (opcional).
+- Recebe atualizações do Telegram em tempo real via **webhook** (Flask).
 
-- Fale com o [@BotFather](https://t.me/BotFather) e crie um novo bot.
-- Anote o token gerado.
-
-### 2. Crie um grupo no Telegram
-  - Adicione o bot que foi criado ao grupo
-  - Envie uma mensagem qualquer
-  - Acesse no navegador
-    `https://api.telegram.org/bot<SEU_TOKEN>/getUpdates`
-  - Procure pelo chatId que noramalmente começa com sinal de '-': '-123456789'
-
-### 3. Configurar webhook
-
-  - Instale o webhook conforme seu ambiente e copie seu token.
-    `https://dashboard.ngrok.com`
-  
-  - Execute o comando no terminal:
-    ```bash
-    ngrok config add-authtoken <SEU_TOKEN>
-    ```
-  - Execute seu servidor Flask (arquivo `webhook.py`), que ficará escutando as requisições.
-  
-  - Inicialize o ngrok na porta 5000 (ou outra) mas tem que verificar se vai ser a mesma do Flask
-    ```bash
-    ngrok http 5000
-    ```
-  - Copie a URL pública HTTPS gerada pelo ngrok, por exemplo:  
-    `https://abcd1234.ngrok.io`
-
-  - Registre a URL do webhook no Telegram, ajustando para o endpoint correto (`/webhook`):
-    `https://api.telegram.org/bot<SEU_TOKEN>/setWebhook?url=https://abcd1234.ngrok.io/webhook`
-   
-  - Caso precise remover o webhook do Telegram:
-    `https://api.telegram.org/bot<SEU_TOKEN>/deleteWebhook`
-
-### 3. Configurar variáveis no `clima_script.py`
-
-- Insira sua chave da OpenWeatherMap (`OWM_API_KEY`) `https://openweathermap.org/`
-- Defina a cidade desejada (exemplo: `Blumenau,BR`)
-- Configure o token do bot Telegram (`TELEGRAM_BOT_TOKEN`)
-- Configure o chat ID (`TELEGRAM_CHAT_ID`) — nesse caso é obtido via webhook automaticamente
-- Para consultar informações de ID do chat entre outras
-  `https://api.telegram.org/bot<SEU_TOKEN>/getUpdates`
-  
 ---
 
-### Executando localmente
+## 🛠️ Tecnologias
 
-Instale as dependências:
+- **Python 3**
+- **Flask** (webhook)
+- **Requests** (HTTP)
+- **Paho-MQTT** (opcional)
+- **ngrok** (expor local para internet)
+- **tmux** (processos rodando em background)
+
+---
+
+## 📁 Estrutura dos arquivos (relevantes)
+
+ClimaBlumenau_webhook_Telegram_Mqtt/
+├─ README.md
+├─ requirements.txt
+├─ start_webhook.sh # Sobe Flask (tmux: webhook) + ngrok (tmux: ngrok) e configura o webhook
+├─ webhook_clima.py # Flask: endpoint /webhook -> despacha para os scripts
+├─ clima_script.py # Clima atual (usa OWM e envia ao Telegram / MQTT)
+├─ previsao_script.py # Previsão em horas (6/12/24)
+└─ notas.txt # Anotações internas
+
+> **Importante:** o arquivo de configuração **não é versionado** por segurança (ver seção abaixo).
+
+---
+
+## 🔐 Configuração (arquivo **`webhook.conf`** / *também chamado de* `webhook.config`)
+
+Crie no diretório do projeto um arquivo **não versionado** chamado `webhook.conf` (se preferir o nome `webhook.config`, adapte os comandos do seu ambiente). Exemplo:
 
 ```bash
+# webhook.conf  (NÃO comitar)
+export TELEGRAM_TOKEN="COLE_AQUI_SEU_TOKEN_DO_BOT"
+export FLASK_PORT=5001
+export SCRIPT_CLIMA="$HOME/ClimaBlumenau_webhook_Telegram_Mqtt/webhook_clima.py"
+export NGROK_REGION="sa"   # South America
+# (opcional) export OWM_API_KEY="SUA_CHAVE_OPENWEATHERMAP"
+# (opcional) export MQTT_BROKER="tcp://host:1883"
+# (opcional) export MQTT_TOPIC="clima/blumenau"
+````
+
+# Não suba este arquivo para o Git. Adicione ao .gitignore:
+
+````bash
+webhook.conf
+webhook.config
+flask.log
+__pycache__/
+*.pyc
+````
+---
+## 📦 Dependências
+# Python (pip)
+
+Instale as libs do projeto:
+
 pip install -r requirements.txt
-python webhook.py
-ngrok http 5000
-```
 
-Entre no grupo e envie /clima no Telegram. O bot responderá com as informações do clima atual.
+# Sistema (não vão no requirements.txt)
 
-Estrutura dos arquivos
-webhook.py — servidor Flask que recebe atualizações do Telegram e chama o script do clima.
+tmux
 
-clima_script.py — script que consulta a API de clima e envia mensagem ao Telegram e MQTT.
+ngrok
 
-requirements.txt — lista de dependências Python.
+python3 (intérprete)
 
-Pode ser que você precise converter os arquivos para Unix com o comando:
-```bash
-dos2unix nomedoarquivo.py
-```
-Garanta que os arquivo estejam marcados como executáveis:
-```
-chmod +x nomedoarquivo.py
-```
-Pode precisar usar um Shebang no inicio dos scripts:
-```bash
-#!/usr/bin/env python
-```
+No Termux (Android), por exemplo:
+````bash
+pkg install tmux
+````
+
+Baixe o binário do ngrok e deixe no PATH (ou use o gerenciador da sua distro).
+---
+## ▶️ Como executar
+
+# Método recomendado (automatizado)
+
+1. Garanta que o webhook.conf foi criado e preenchido.
+
+2. Dê permissão e execute o script:
+````bash
+chmod +x start_webhook.sh
+./start_webhook.sh
+````
+
+O script:
+
+* remove webhook antigo no Telegram,
+* sobe Flask em tmux (sessão webhook) na porta definida (FLASK_PORT),
+* sobe ngrok em tmux (sessão ngrok) apontando para a mesma porta,
+* captura a URL pública HTTPS do ngrok,
+* registra o webhook no Telegram (/webhook).
+
+# Logs (quando quiser ver):
+
+````bash
+tmux attach -t webhook   # saída do Flask
+tmux attach -t ngrok     # saída do ngrok
+# para sair sem
+ matar: Ctrl+b, depois d
+````
+
+# Alternativa manual (somente se necessário)
+
+1. Rodar Flask diretamente:
+
+````bash
+export FLASK_PORT=5001
+python3 webhook_clima.py  # ou: python3 webhook_clima.py --port 5001
+````
+
+2. Expor com ngrok e registrar o webhook:
+
+````bash
+ngrok http 5001 --region=sa
+# copie a URL https pública do ngrok, ex: https://abcd1234.ngrok-free.app
+
+curl -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/setWebhook?url=https://abcd1234.ngrok-free.app/webhook"
+````
+
+---
+
+## 🔧 Configurações específicas dos scripts
+
+* clima_script.py
+	* Use sua chave OpenWeatherMap (OWM_API_KEY) e defina a cidade (ex.: Blumenau,BR).
+	*Pode usar variáveis de ambiente ou constantes no próprio script (conforme sua implementação atual).
+
+* previsao_script.py
+	*Recebe como argumento o número de horas (6, 12 ou 24) + chat_id.
+Obs.: O webhook_clima.py despacha conforme o texto do comando recebido no Telegram.
+
+---
+
+## 🔒 Boas práticas de segurança
+
+* Nunca comitar webhook.conf / webhook.config (contém token do bot e chaves).
+* Se um token vazar, gere um novo no BotFather e remova o antigo.
+* Evite deixar logs sensíveis versionados (ex.: flask.log).
+
+---
+
+## ❓ Solução de problemas
+
+* Não recebo mensagens do Telegram
+	* Confira se o ngrok está ativo e a URL pública está registrada como webhook.
+	* Verifique a sessão tmux do Flask: tmux attach -t webhook.
+* Porta em uso / conflito
+	* Ajuste FLASK_PORT no webhook.conf.
+	* Mate sessões antigas: tmux kill-session -t webhook, tmux kill-session -t ngrok.
+* Erros de dependências
+	* Reinstale: pip install -r requirements.txt.
+
+---
+
+## ✅ Licença
+
+Projeto de uso pessoal/educacional. Adapte conforme sua necessidade.
