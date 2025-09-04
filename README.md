@@ -38,15 +38,16 @@ Para facilitar testes, existe um grupo chamado **Clima Blumenau**.
 ---
 
 ## 📁 Estrutura dos arquivos (relevantes)
-
-ClimaBlumenau_webhook_Telegram_Mqtt
-	├─ README.md
-	├─ requirements.txt
-	├─ start_webhook.sh # Sobe Flask (tmux: webhook) + ngrok (tmux: ngrok) e configura o webhook
-	├─ webhook_clima.py # Flask: endpoint /webhook -> despacha para os scripts
-	├─ clima_script.py # Clima atual (usa OWM e envia ao Telegram / MQTT)
-	├─ previsao_script.py # Previsão em horas (6/12/24)
-	└─ notas.txt # Anotações internas
+````bash
+ClimaBlumenau_webhook_Telegram_Mqtt/
+├─ README.md
+├─ requirements.txt
+├─ start_webhook.sh # sobe Flask (tmux: webhook) + ngrok (tmux: ngrok) e configura o webhook
+├─ webhook_clima.py # Flask: endpoint /webhook -> despacha para os scripts
+├─ clima_script.py # Clima atual (usa OWM e envia ao Telegram / MQTT)
+├─ previsao_script.py # Previsão em horas (6/12/24)
+└─ notas.txt # Anotações internas
+````
 
 > **Importante:** o arquivo de configuração **não é versionado** por segurança (ver seção abaixo).
 
