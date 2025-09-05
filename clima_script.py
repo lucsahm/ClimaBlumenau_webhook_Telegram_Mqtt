@@ -1,86 +1,93 @@
-#!/usr/bin/env python
-
-import requests
-import json
-import paho.mqtt.client as mqtt
+#!/usr/bin/env python3
+# $HOME/Scripts/ClimaBlumenau_webhook_Telegram_Mqtt/clima_script.py
+import os
 import sys
+import json
+import requests
+import paho.mqtt.client as mqtt
 
-# CONFIGURAÇÕES
-OWM_API_KEY = '2db226f533e52c42dc179f1ec8de42d2'  # <- Insira sua chave da OpenWeatherMap (vem por email)
-CITY = 'Blumenau,BR'
-MQTT_BROKER = 'broker.hivemq.com' # seu broker
-MQTT_PORT = 1883
-MQTT_TOPIC = 'blunenau/clima' # seu topico MQTT
+# --------- Config por ENV (webhook.conf) ----------
+OWM_API_KEY   = os.getenv("OWM_API_KEY")
+CITY          = os.getenv("CITY", "Blumenau,BR")
+TELEGRAM_TOKEN= os.getenv("TELEGRAM_TOKEN")
 
-TELEGRAM_BOT_TOKEN = '8208784836:AAHpLzslU93Pf49QaY6-WKvbuD72KYCgMq8' # https://api.telegram.org/bot<CHAVEDOBOT>/getUpdates para verificar qual a palavra do codigo correta
+MQTT_BROKER   = os.getenv("MQTT_BROKER", "broker.hivemq.com")
+MQTT_PORT     = int(os.getenv("MQTT_PORT", "1883"))
+MQTT_TOPIC    = os.getenv("MQTT_TOPIC", "seu/topico")
+MQTT_USER     = os.getenv("MQTT_USER", "")
+MQTT_PASS     = os.getenv("MQTT_PASS", "")
+
+# --------- Helpers ----------
+def require(var_name, value):
+    if not value:
+        print(f"[ERRO] Variável de ambiente obrigatória não definida: {var_name}")
+        sys.exit(1)
+
+require("OWM_API_KEY", OWM_API_KEY)
+require("TELEGRAM_TOKEN", TELEGRAM_TOKEN)
 
 def obter_dados_clima():
-    url = f'https://api.openweathermap.org/data/2.5/weather?q={CITY}&appid={OWM_API_KEY}&units=metric&lang=pt_br'
-    response = requests.get(url)
-    data = response.json()
+    url = "https://api.openweathermap.org/data/2.5/weather"
+    params = {"q": CITY, "appid": OWM_API_KEY, "units": "metric", "lang": "pt_br"}
+    try:
+        r = requests.get(url, params=params, timeout=10)
+        r.raise_for_status()
+        data = r.json()
 
-    if response.status_code != 200:
-        print("Erro ao buscar dados do clima:", data)
+        velocidade_vento_ms = (data.get("wind") or {}).get("speed", 0.0)
+        velocidade_vento_kmh = round(float(velocidade_vento_ms) * 3.6, 1)
+
+        return {
+            "cidade": data.get("name", CITY),
+            "temperatura": (data.get("main") or {}).get("temp"),
+            "sensacao": (data.get("main") or {}).get("feels_like"),
+            "umidade": (data.get("main") or {}).get("humidity"),
+            "vento": velocidade_vento_kmh,  # número
+            "descricao": ((data.get("weather") or [{}])[0]).get("description", "")
+        }
+    except requests.RequestException as e:
+        print(f"[ERRO] Falha ao obter clima: {e}")
         return None
 
-    velocidade_vento_ms = data['wind']['speed']
-    # Converte m/s para km/h (1 m/s = 3.6 km/h)
-    velocidade_vento_kmh = round(velocidade_vento_ms * 3.6, 2) # Arredonda para 2 casas decimais
+def publicar_mqtt(payload: dict):
+    try:
+        client = mqtt.Client()
+        if MQTT_USER:
+            client.username_pw_set(MQTT_USER, MQTT_PASS or None)
+        client.connect(MQTT_BROKER, MQTT_PORT, 60)
+        client.loop_start()
+        msg = json.dumps(payload, ensure_ascii=False)
+        res = client.publish(MQTT_TOPIC, msg, qos=1)
+        res.wait_for_publish()
+        client.loop_stop()
+        client.disconnect()
+        print(f"[OK] Publicado em '{MQTT_TOPIC}': {msg}")
+    except Exception as e:
+        print(f"[WARN] MQTT publish falhou: {e}")
 
-    clima = {
-        'cidade': data.get('name'),
-        'temperatura': data['main']['temp'],
-        'sensacao': data['main']['feels_like'],
-        'umidade': data['main']['humidity'],
-        'vento': f"{velocidade_vento_kmh} km/h",
-        'descricao': data['weather'][0]['description']
-    }
-
-    return clima
-
-def publicar_mqtt(payload):
-    client = mqtt.Client()
-    client.connect(MQTT_BROKER, MQTT_PORT, 60)
-    client.loop_start()
-
-    mensagem = json.dumps(payload, ensure_ascii=False)
-    client.publish(MQTT_TOPIC, mensagem,qos=1)
-    print(f'Publicado em {MQTT_TOPIC}: {mensagem}')
-
-    client.loop_stop()
-    client.disconnect()
-
-def enviar_telegram(chat_id, payload):
+def enviar_telegram(chat_id: str, payload: dict):
     texto = (
         f"🌤 Clima em {payload['cidade']}:\n"
         f"🌡 Temperatura: {payload['temperatura']}°C\n"
         f"🤒 Sensação: {payload['sensacao']}°C\n"
         f"💧 Umidade: {payload['umidade']}%\n"
-        f"💨 Vento: {payload['vento']} kmh\n"
+        f"💨 Vento: {payload['vento']} km/h\n"
         f"🔎 Descrição: {payload['descricao'].capitalize()}"
     )
+    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+    params = {"chat_id": chat_id, "text": texto, "parse_mode": "HTML"}
+    try:
+        r = requests.post(url, data=params, timeout=10)
+        r.raise_for_status()
+        print("[OK] Mensagem enviada ao Telegram.")
+    except requests.RequestException as e:
+        print(f"[ERRO] Falha ao enviar para Telegram: {e}")
 
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    params = {
-        "chat_id": chat_id,
-        "text": texto,
-        "parse_mode": "HTML"
-    }
-
-    response = requests.post(url, data=params)
-    if response.status_code == 200:
-        print("Mensagem enviada ao Telegram com sucesso.")
-    else:
-        print("Erro ao enviar mensagem para o Telegram:", response.text)
-
-# EXECUÇÃO DIRETA
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Uso: python clima_script.py <chat_id>")
         sys.exit(1)
-
     chat_id = sys.argv[1]
-
     dados = obter_dados_clima()
     if dados:
         publicar_mqtt(dados)

@@ -1,116 +1,80 @@
 #!/usr/bin/env python3
-
-import requests
+# $HOME/Scripts/ClimaBlumenau_webhook_Telegram_Mqtt/previsao_script.py
+import os
 import sys
-from datetime import datetime
+import requests
 
-# --- CONFIGURAÇÕES ---
-# Suas chaves de API. Recomendo usar variáveis de ambiente ou um arquivo de configuração
-# para chaves sensíveis em vez de codificá-las diretamente no script.
-API_KEY = "2db226f533e52c42dc179f1ec8de42d2"
-BOT_TOKEN = "8208784836:AAHpLzslU93Pf49QaY6-WKvbuD72KYCgMq8"
-TELEGRAM_API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+API_KEY        = os.getenv("OWM_API_KEY")
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+CITY           = os.getenv("CITY", "Blumenau,BR")
+TELEGRAM_API_URL = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
 
-CITY = "Blumenau"
+def require(var_name, value):
+    if not value:
+        print(f"[ERRO] Variável obrigatória não definida: {var_name}")
+        sys.exit(1)
 
-# --- FUNÇÃO obter_previsao ---
-def obter_previsao(horas):
+require("OWM_API_KEY", API_KEY)
+require("TELEGRAM_TOKEN", TELEGRAM_TOKEN)
+
+def obter_previsao(horas: int) -> str:
     url = "https://api.openweathermap.org/data/2.5/forecast"
-    params = {
-        "q": CITY,
-        "appid": API_KEY,
-        "units": "metric",
-        "lang": "pt_br"
-    }
-
-    try: # Adicionei um try-except para a requisição da API
-        response = requests.get(url, params=params)
-        response.raise_for_status() # Levanta exceção para erros HTTP
-        data = response.json()
-
+    params = {"q": CITY, "appid": API_KEY, "units": "metric", "lang": "pt_br"}
+    try:
+        r = requests.get(url, params=params, timeout=10)
+        r.raise_for_status()
+        data = r.json()
         if "list" not in data:
-            return "Erro: dados de previsão não encontrados na resposta da API."
+            return "Erro: dados de previsão não encontrados."
 
-        texto_previsao_linhas = []
-        # Certifique-se de que blocos não excede o número de elementos em data["list"]
+        linhas = []
         blocos = min(horas // 3, len(data["list"]))
-        
         for i in range(blocos):
             bloco = data["list"][i]
-            dt_txt = bloco["dt_txt"]
-            # A hora da API é UTC. Se quiser local de Blumenau (GMT-3), precisa converter.
-            # Por simplicidade, mantive o fuso horário da string da API.
-            hora = dt_txt[11:16] # Pega apenas HH:MM
+            hora = bloco.get("dt_txt", "")[11:16]
+            main = bloco.get("main", {})
+            weather = (bloco.get("weather") or [{}])[0]
+            wind = bloco.get("wind", {})
+            vento_kmh = float(wind.get("speed", 0.0)) * 3.6
 
-            temp = bloco["main"]["temp"]
-            sensacao = bloco["main"]["feels_like"]
-            descricao = bloco["weather"][0]["description"]
-            umidade = bloco["main"]["humidity"]
-            vento_ms = bloco["wind"]["speed"]
-            vento_kmh = vento_ms * 3.6 # Converte m/s para km/h
-
-            texto_previsao_linhas.append(
+            linhas.append(
                 f"<b>Horário:</b> {hora}\n"
-                f"🌡️ Temperatura: {temp:.1f}°C (sensação {sensacao:.1f}°C)\n"
-                f"☁️ Condição: {descricao.capitalize()}\n"
-                f"💧 Umidade: {umidade}%\n"
+                f"🌡️ Temp: {main.get('temp', 0):.1f}°C (sens. {main.get('feels_like', 0):.1f}°C)\n"
+                f"☁️ Condição: {weather.get('description','').capitalize()}\n"
+                f"💧 Umidade: {main.get('humidity','?')}%\n"
                 f"💨 Vento: {vento_kmh:.1f} km/h\n"
-                "--------------------" # Separador para cada previsão
+                f"--------------------"
             )
+        return "\n".join(linhas).strip()
+    except requests.RequestException as e:
+        return f"Erro ao obter previsão do OpenWeatherMap: {e}"
 
-        return "\n".join(texto_previsao_linhas).strip()
-    
-    except requests.exceptions.RequestException as e:
-        return f"Erro de conexão ao obter previsão do OpenWeatherMap: {e}"
-    except Exception as e:
-        return f"Erro inesperado ao processar dados da previsão: {e}"
-
-
-# --- FUNÇÃO DE ENVIO PARA O TELEGRAM (AGORA NO NÍVEL CORRETO DE INDENTAÇÃO) ---
-def enviar_previsao_telegram(chat_id, texto_previsao):
-    url = TELEGRAM_API_URL
-    params = {
-        "chat_id": chat_id,
-        "text": texto_previsao,
-        "parse_mode": "HTML" # Verifique se seu texto contém HTML. Caso contrário, remova ou use "MarkdownV2".
-    }
-
+def enviar_previsao_telegram(chat_id: str, texto_previsao: str) -> bool:
+    params = {"chat_id": chat_id, "text": texto_previsao, "parse_mode": "HTML"}
     try:
-        response = requests.post(url, data=params)
-        response.raise_for_status() # Levanta exceção para erros HTTP (4xx ou 5xx)
-        print("Mensagem de previsão enviada ao Telegram com sucesso.")
+        r = requests.post(TELEGRAM_API_URL, data=params, timeout=10)
+        r.raise_for_status()
+        print("[OK] Previsão enviada ao Telegram.")
         return True
-    except requests.exceptions.RequestException as e:
-        print(f"Erro ao enviar mensagem de previsão para o Telegram: {e}")
-        if hasattr(e, 'response') and e.response is not None:
-            print(f"Resposta de erro do Telegram: {e.response.text}")
+    except requests.RequestException as e:
+        print(f"[ERRO] Falha ao enviar previsão ao Telegram: {e}")
         return False
 
-# --- EXECUÇÃO PRINCIPAL DO SCRIPT ---
 if __name__ == "__main__":
-    # O script espera 3 argumentos: [nome_do_script, horas, chat_id]
     if len(sys.argv) != 3:
         print("Uso: ./previsao_script.py <horas> <chat_id>")
         sys.exit(1)
-
     try:
-        horas = int(sys.argv[1]) # O primeiro argumento é o número de horas (ex: 6, 12, 24)
-        chat_id = sys.argv[2]    # O segundo argumento é o ID do chat do Telegram
+        horas = int(sys.argv[1])
+        chat_id = sys.argv[2]
     except ValueError:
-        print("Erro: O número de horas deve ser um inteiro.")
-        # É uma boa prática enviar essa mensagem de erro para o Telegram também, se possível
+        print("Erro: <horas> deve ser inteiro (6, 12, 24).")
         sys.exit(1)
 
-    if horas not in [6, 12, 24]:
-        # Envia a mensagem de erro para o Telegram
-        enviar_previsao_telegram(chat_id, "Erro: Por favor, solicite a previsão para 6h, 12h ou 24h.")
+    if horas not in (6, 12, 24):
+        enviar_previsao_telegram(chat_id, "Erro: peça 6h, 12h ou 24h.")
         sys.exit(1)
 
-    # 1. Obtém o texto da previsão (já vem formatado)
-    previsao_detalhada = obter_previsao(horas)
-    
-    # 2. Constrói a mensagem final completa para o usuário
-    mensagem_final_para_telegram = f"Previsão para as próximas {horas} horas em {CITY}:\n\n{previsao_detalhada}"
-
-    # 3. Envia a mensagem completa para o Telegram
-    enviar_previsao_telegram(chat_id, mensagem_final_para_telegram)
+    previsao = obter_previsao(horas)
+    mensagem = f"Previsão para as próximas {horas}h em {CITY}:\n\n{previsao}"
+    enviar_previsao_telegram(chat_id, mensagem)
