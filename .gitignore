@@ -3,6 +3,7 @@ flask.log
 __pycache__/
 *.pyc
 webhook.conf
+notas.txt
 flask.log
 __pycache__/
 *.pyc

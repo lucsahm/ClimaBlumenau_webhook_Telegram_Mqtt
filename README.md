@@ -212,6 +212,31 @@ curl -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/setWebhook?url=https
 
 ---
 
+## ▶️ NOTAS
+
+# Remover webhook
+curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/deleteWebhook"
+
+# Definir webhook (use a URL https pública do ngrok)
+# Ex.: NGROK_URL=$(curl -s http://127.0.0.1:4040/api/tunnels | sed -n 's/.*"public_url":"\([^"]*\)".*/\1/p' | head -n1)
+curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/setWebhook?url=${NGROK_URL}/webhook"
+
+# Ver status do webhook (mostra últimos erros)
+curl -s "https://api.telegram.org/bot$TELEGRAM_TOKEN/getWebhookInfo" | sed 's/,/\n/g'
+
+# Descobrir chat_id (precisa estar sem webhook)
+curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/deleteWebhook"
+# mande uma msg pro bot, então:
+curl -s "https://api.telegram.org/bot$TELEGRAM_TOKEN/getUpdates" \
+| sed -n 's/.*"chat":{[^}]*"id":\([-0-9]*\).*/\1/p'
+
+# Enviar mensagem de teste
+curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage" \
+  -d chat_id=<CHAT_ID> \
+  -d text="Teste do bot (via curl)" \
+  -d parse_mode=HTML
+
+
 ## ✅ Licença
 
 Projeto pessoal/educacional. Adapte conforme necessário.

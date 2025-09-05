@@ -2,7 +2,7 @@
 # $HOME/Scripts/ClimaBlumenau_webhook_Telegram_Mqtt/start_webhook.sh
 set -Eeuo pipefail
 
-CONFIG_FILE="$HOME/Scripts/ClimaBlumenau_webhook_Telegram_Mqtt/webhook.conf"
+CONFIG_FILE="$HOME/ClimaBlumenau_webhook_Telegram_Mqtt/webhook.conf"
 [[ -f "$CONFIG_FILE" ]] || { echo "[ERRO] Config não encontrada: $CONFIG_FILE"; exit 1; }
 
 # shellcheck source=/dev/null
